@@ -1,13 +1,10 @@
-import com.sun.mail.smtp.SMTPMessage;
 import common.MailAttribute;
 import model.MailInfo;
 import util.MailUtil;
 
 import javax.mail.*;
-import javax.mail.internet.*;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,12 +37,9 @@ public class SendMail {
             return;
         }
         File htmlReportFile = new File(fileName);
-
         try {
-
             System.out.println("------");
             attachFileList.add(new File(fileName));
-
             SendMail.sendMessage(mailInfo,htmlReportFile,attachFileList);
         } catch (javax.mail.MessagingException exc) {
             exc.printStackTrace();
@@ -59,27 +53,21 @@ public class SendMail {
     public static void sendMessage(MailInfo mailInfo, File reportFile,List<File> attachFileList)
             throws MessagingException, IOException {
 
-        // Step 1:  Configure the mail session
         Session mailSession = MailUtil.getMailSession(mailInfo);
         mailSession.setDebug(true);
-
         Message testMessage = MailUtil.prepareMimeMessage(mailInfo,mailSession);
         Multipart mp = MailUtil.prepareMultipart(reportFile);
         for(File attachFile:attachFileList){
             BodyPart attachPart = MailUtil.prepareMultiAttachement(attachFile);
             mp.addBodyPart(attachPart);
         }
-
         testMessage.setSubject(mailInfo.getSubject());
         testMessage.setContent(mp);
         System.out.println("Message constructed");
-
-        // Step 3:  Now send the message
         Transport transport = mailSession.getTransport(MailAttribute.MAIL_TRANS_PROTOCOL);
         transport.connect(mailInfo.getSmtpHost(), mailInfo.getUserName(), mailInfo.getPassword());
         transport.sendMessage(testMessage, testMessage.getAllRecipients());
         transport.close();
-
 
         System.out.println("Message sent!");
     }
